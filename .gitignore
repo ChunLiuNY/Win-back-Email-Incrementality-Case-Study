@@ -1,0 +1,7 @@
+data/
+.DS_Store
+.claude/
+Reference/
+CLAUDE.md
+PLAN.md
+01_data_simulation_and_validation.ipynb
