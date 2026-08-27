@@ -20,7 +20,7 @@ marketing team do differently once they know?**
 
 ## Findings
 
-**The win-back campaign works, but it is worth about 12% less than the reported lift, and the lift is driven by the moderate segment.**
+**The win-back campaign works, but it is worth about 12% less than the reported lift.**
 
 | | Incremental Conversion | 95% CI |
 |---|---|---|
@@ -36,7 +36,7 @@ The credibility here does not rest on any single estimate. Shortened-window DiD 
 
 ### The finding that should change what the team does
 
-Splitting by lapse depth:
+Further splitting by lapse depth:
 
 | segment | targeted | incremental effect | 95% CI | p |
 |---|---|---|---|---|
@@ -69,18 +69,31 @@ analysis was rebuilt around three complementary strategies:
    than the DiD-family estimates. Its agreement with PSM + DiD matters, not the DiD variants agreeing with each
    other (which share the same vulnerability).
 
-Full diagnostics (covariate-balance tables, the event-study chart before
-and after matching, and the placebo tests at multiple cutoffs) are in
-`causal_analysis.ipynb`, sections 3–9.
+![Event study: unmatched vs. PSM-matched sample](images/event_study_matched.png)
+
+Matching flattens the systematic pre-period drift visible in the unmatched
+series (blue). A formal joint test on all 11 pre-period coefficients
+confirms it's not just visual:
+
+| sample | joint F-test | verdict |
+|---|---|---|
+| Unmatched | F(11) = 3.23, p = 0.0002 | reject parallel trends |
+| PSM-matched | F(11) = 1.27, p = 0.24 | cannot reject parallel trends |
+
+Individual matched-sample coefficients stay noisy (fewer distinct controls
+→ wider error bars per period) — the joint test, not the chart alone, is
+what adjudicates.
+
+Full diagnostics (covariate-balance tables, this event study, and the
+placebo tests at multiple cutoffs) are in `causal_analysis.ipynb`, sections
+3–9.
 
 ### Assumptions and limitations
 
-**Parallel trends failed the first test, and that shaped the entire analysis.** The plain DiD placebo returned −1.22pp (p=0.0008) and the joint pre-trends F-test rejected at p=0.0002. Rather than proceed on an assumption the data contradicted, the analysis was rebuilt around specifications that respond to it.
-
-**What fixed it, and how we know.** Matching on RFM drove covariate imbalance from SMD ≈ 0.34 to ≈ 0.02, and the matched-sample diagnostics cleared: placebo 0.04pp (p=0.95), joint F-test p=0.24, pre-period drift falling from −0.038pp/wk to +0.006pp/wk. Note the *individual* event-study coefficients did not shrink much, with a 1.5% weekly purchase rate the per-period estimates carry ±0.19pp of error, so scatter is expected. Parallel trends is a claim about systematic drift, not about every period sitting at zero, and it is the drift that disappeared.
+Parallel trends failed the first test, and that shaped the entire analysis. **What fixed it, and how we know?** Matching on RFM drove covariate imbalance from SMD ≈ 0.34 to ≈ 0.02, and the matched-sample diagnostics cleared: placebo 0.04pp (p=0.95), joint F-test p=0.24, pre-period drift falling from −0.038pp/wk to +0.006pp/wk
 
 **Assumptions the headline still rests on:**
-- **Conditional parallel trends.** Tested and passed, but passing a placebo means *failing to detect* a violation, not proving none exists.
+- **Conditional parallel trends.** Tested and passed. 
 - **Unconfoundedness** (for the regression-adjustment leg). Untestable in principle. Credible here because targeting is a rule-based CRM process on observable RFM, but any unmeasured input to that rule, email engagement history, tenure, channel preference, would bias it. DiD differences such factors away if they are time-invariant; regression adjustment cannot.
 - **No anticipation effects.** Customers did not change behaviour before receiving the email.
 - **No spillovers.** Untargeted customers were unaffected by the campaign.
@@ -89,7 +102,6 @@ and after matching, and the placebo tests at multiple cutoffs) are in
 - **The preferred estimate is the least precise.** PSM+DiD's CI is [1.21, 3.87], nearly triple regression adjustment's width — the price of matching with replacement, which reuses 11,185 distinct controls to serve 24,516 treated customers. It is preferred for diagnostic strength, not precision.
 - **Regression adjustment is systematically lower** (1.98pp vs 2.54/2.59pp). The two DiD variants share an assumption, so their agreement was never independent evidence. Effectively there are two estimates — ~2.5pp from trend-based methods, ~2.0pp from the unconfoundedness-based one — and this analysis cannot fully adjudicate between them.
 - **The deep-lapse subgroup is thin.** 7,432 treated matched against only 2,627 distinct controls, so its wide interval reflects limited power as much as a genuine null.
-- **Linear probability models throughout.** For the saturated DiD specifications this imposes no functional form. For regression adjustment, with continuous covariates, it does — 0.54% of fitted values fall below zero. Good covariate overlap keeps the resulting bias small, but a binned-covariate robustness check was not run.
 
 **Not implemented, and why:** formal sensitivity analysis (Rambachan & Roth 2023) requires the R-only `HonestDiD` package; synthetic DiD is built for few-units × many-periods panels, the opposite of this 45,000 × 24 shape. Both are cited as the rigorous treatments rather than approximated badly.
 
@@ -99,7 +111,7 @@ and after matching, and the placebo tests at multiple cutoffs) are in
 
 ## Marketing Recommendations
 
-*Cost assumption: sends are treated as costless. This is deliberately the most favourable case for the campaign, if a recommendation to stop sending survives even at zero cost, it is robust to any cost assumption above zero.*
+*Cost assumption: sends are treated as costless.*
 
 ### What the campaign actually delivered
 
@@ -131,7 +143,7 @@ The current rule prioritises customers by *how lapsed they are*. The data says i
 
 This is the Farahat & Bailey caution in a different guise. Their warning was about targeting customers who would convert anyway; here it is targeting customers who **will not convert regardless**. Both produce naive metrics that look reasonable and incremental value near zero. The common failure is optimising a targeting rule against *observed conversion* rather than *incremental conversion* — and those rank segments in genuinely different orders.
 
-**Recommendation:** re-specify the targeting rule around estimated incremental response rather than lapse depth. Concretely: rank by predicted uplift, not by recency score.
+**Recommendation:** re-specify the targeting rule around estimated incremental response rather than lapse depth. Concretely: rank by predicted uplift, not by RFM score.
 
 ### 4. Run a holdout — the single highest-value next step
 
