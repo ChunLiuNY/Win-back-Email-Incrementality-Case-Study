@@ -177,6 +177,8 @@ benchmarks, and shouldn't be quoted as industry figures.
 
 ## References
 
+- Card, D. & Krueger, A. (1994). *Minimum Wages and Employment: A Case
+  Study of the Fast-Food Industry in New Jersey and Pennsylvania.*
 - Farahat, A. & Bailey, M. (2012). *How Effective is Targeted Advertising?*
 - Lewis, R. & Reiley, D. (2014). *Online Ads and Offline Sales.*
 - Gordon, B., Zettelmeyer, F., Bhargava, N. & Chapsky, D. (2018). *A
@@ -189,5 +191,4 @@ benchmarks, and shouldn't be quoted as industry figures.
   Trends.*
 - Ascarza, E. (2018). *Retention Futility: Targeting High-Risk Customers
   Might Be Ineffective.*
-- Card, D. & Krueger, A. (1994). *Minimum Wages and Employment: A Case
-  Study of the Fast-Food Industry in New Jersey and Pennsylvania.*
+
