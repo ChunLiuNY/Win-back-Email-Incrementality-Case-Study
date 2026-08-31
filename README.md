@@ -48,45 +48,104 @@ The gap is real, `lapse_bucket` was pre-specified in data. Regression adjustment
 
 ## Method
 
-The identification strategy is difference-in-differences: compare each
-group's *change* in conversion rate (pre- vs. post-campaign), not just their
-post-period levels. 
+### 1. Identification strategy
 
-**The parallel-trends assumption was tested, not assumed, and it failed
-the first test.** A placebo test on the pre-period alone returned a
-significant "effect" (p < 0.001), and a formal joint pre-trends test
-rejected at p = 0.0002. Rather than proceed on a violated assumption, the
-analysis was rebuilt around three complementary strategies:
+Targeting was non-random, so comparing post-period *levels* confounds the
+email's effect with who was selected to receive it. Difference-in-differences
+compares each group's *change* instead — differencing away any customer trait
+that is stable over time, whether or not it was measured.
 
-1. **Propensity-score matching + DiD** (headline spec): match treated and
-   control customers on their pre-period RFM profile first, closing the
-   baseline-level gap driving the violation, then re-run DiD on the matched
-   sample. The matched-sample placebo test came back clean (p = 0.95).
-2. **Shortened-window DiD**: a robustness check restricting the pre-period
-   to the window where the violation was smallest.
-3. **Regression adjustment**: the independence anchor. It doesn't rely on
-   parallel trends at all, so it can fail for entirely different reasons
-   than the DiD-family estimates. Its agreement with PSM + DiD matters, not the DiD variants agreeing with each
-   other (which share the same vulnerability).
+That buys a different assumption in exchange: **parallel trends** — absent the
+campaign, treated and control would have moved together.
+
+**It was tested, and it failed.** A placebo test on the pre-period alone
+returned a significant "effect" (−1.22pp, p = 0.0008), and a joint F-test on
+all 11 pre-period leads rejected at p = 0.0002.
+
+**Why it failed** follows directly from how targeting worked. The CRM rule
+selected on RFM, so treated and control customers sit at systematically
+different baseline RFM levels. And customers at different RFM levels follow
+different purchase trajectories. 
+
+**Conditional parallel trends** asks only that trends run parallel among
+customers with *comparable* RFM, not across the raw groups — and matching on RFM
+is how the estimation strategy below satisfies it.
+
+### 2. Estimation strategy — PSM + DiD (headline)
+
+Fit a logistic propensity model on RFM, match each treated customer to their
+nearest control by propensity score (1-NN, 0.2 SD caliper, with replacement),
+then run the DiD regression on the matched sample, weighting reused controls by
+how often they were matched.
+
+Matching drove covariate imbalance from **SMD ≈ 0.34 to ≈ 0.02**, with 100% of
+treated customers finding a match inside the caliper.
+
+**Why this is the headline spec, and not one of the other two:**
+
+- **It is the only estimate whose own identifying assumption was tested and
+  passed.** After matching, the placebo effect collapses from −1.22pp
+  (p = 0.0008) to 0.04pp (p = 0.95), and the joint pre-trends test goes from
+  rejecting to not rejecting.
+- **It targets the diagnosed mechanism directly.** If baseline RFM imbalance is
+  what broke parallel trends, equalising RFM is the fix aimed at that cause —
+  not a generic robustness tweak.
+- **It keeps DiD's structural advantage.** Differencing removes *unobserved*
+  time-invariant confounders — brand affinity, tenure, channel preference —
+  which a cross-sectional estimator cannot touch. In a real CRM system, targeting
+  rules routinely use inputs absent from the analysis table, so this matters.
+
+**The cost, stated plainly:** it carries the widest confidence interval of the
+three (CI [1.21, 3.87], roughly triple regression adjustment's width). Matching
+with replacement reuses 11,185 distinct controls to serve 24,516 treated
+customers, so the effective sample behind the estimate is smaller than the
+headcount suggests — a wider interval is the direct consequence. This spec is
+chosen because its assumption survived testing, accepting a wider interval as
+the trade.
 
 ![Event study: unmatched vs. PSM-matched sample](images/event_study_matched.png)
-
-Matching flattens the systematic pre-period drift visible in the unmatched
-series (blue). A formal joint test on all 11 pre-period coefficients
-confirms it's not just visual:
 
 | sample | joint F-test | verdict |
 |---|---|---|
 | Unmatched | F(11) = 3.23, p = 0.0002 | reject parallel trends |
 | PSM-matched | F(11) = 1.27, p = 0.24 | cannot reject parallel trends |
 
-Individual matched-sample coefficients stay noisy (fewer distinct controls
-→ wider error bars per period) — the joint test, not the chart alone, is
-what adjudicates.
+Individual matched-sample coefficients stay noisy (fewer distinct controls →
+wider per-period error bars), so the chart alone is not decisive. Parallel
+trends is a claim about *systematic drift*, not about every period sitting at
+zero — and it is the drift that disappears: −0.038pp/wk before matching,
++0.006pp/wk after.
 
-Full diagnostics (covariate-balance tables, this event study, and the
-placebo tests at multiple cutoffs) are in `causal_analysis.ipynb`, sections
-3–9.
+### 3. Robustness check — shortened-window DiD
+
+Restrict the pre-period to the weeks where the violation was smallest and rerun
+the same specification. Estimate: **2.59pp** [1.92, 3.27]; its own placebo test
+comes back insignificant (−0.33pp, p = 0.15).
+
+This asks a narrow question: *is the headline an artifact of how the bad
+pre-period was handled?* It is **not** triangulation — it rests on the same
+parallel-trends assumption as PSM + DiD, so the two were never likely to
+disagree, and their agreement is weak evidence on its own.
+
+### 4. Triangulation — regression adjustment
+
+Regress the post-period outcome on `treated` plus the RFM covariates, with no
+pre-period and no time dimension at all. Estimate: **1.98pp** [1.43, 2.52].
+
+This is the check that carries evidential weight, because it can fail
+*independently*. It rests on **unconfoundedness** — that RFM captures everything
+driving both targeting and purchasing — rather than on parallel trends. Being
+cross-sectional, it never looks at the pre-period, so the violation that broke
+plain DiD cannot reach it.
+
+Each method is therefore strong exactly where the other is weak: DiD handles
+unobserved time-invariant confounders but needs a trend assumption; regression
+adjustment needs no trend assumption but only controls for what is measured.
+Their agreement (2.54pp vs. 1.98pp) is the central credibility claim — not the
+two DiD variants agreeing with each other.
+
+Full diagnostics (covariate-balance tables, this event study, and placebo tests
+at multiple cutoffs) are in `causal_analysis.ipynb`, sections 3–9.
 
 ### Assumptions and limitations
 
@@ -99,7 +158,7 @@ Parallel trends failed the first test, and that shaped the entire analysis. **Wh
 - **No spillovers.** Untargeted customers were unaffected by the campaign.
 
 **Known weaknesses:**
-- **The preferred estimate is the least precise.** PSM+DiD's CI is [1.21, 3.87], nearly triple regression adjustment's width — the price of matching with replacement, which reuses 11,185 distinct controls to serve 24,516 treated customers. It is preferred for diagnostic strength, not precision.
+- **The preferred estimate carries the widest interval.** PSM+DiD's CI is [1.21, 3.87], nearly triple regression adjustment's width — matching with replacement reuses 11,185 distinct controls to serve 24,516 treated customers, so the effective sample is smaller than the headcount implies. The spec was chosen because its assumption survived testing, with the wider interval accepted as the trade.
 - **Regression adjustment is systematically lower** (1.98pp vs 2.54/2.59pp). The two DiD variants share an assumption, so their agreement was never independent evidence. Effectively there are two estimates — ~2.5pp from trend-based methods, ~2.0pp from the unconfoundedness-based one — and this analysis cannot fully adjudicate between them.
 - **The deep-lapse subgroup is thin.** 7,432 treated matched against only 2,627 distinct controls, so its wide interval reflects limited power as much as a genuine null.
 
