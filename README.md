@@ -20,7 +20,7 @@ marketing team do differently once they know?**
 
 ## Findings
 
-**The win-back campaign works, but it is worth about 12% less than the reported lift.**
+**The win-back campaign works, but it is worth meaningfully less than the reported lift — somewhere between 12% and 31% of that lift is selection bias, not campaign effect.**
 
 | | Incremental Conversion | 95% CI |
 |---|---|---|
@@ -30,7 +30,7 @@ marketing team do differently once they know?**
 | Regression Adjustment | 1.98pp | [1.43, 2.52] |
 | **All three estimators consistent with** | **1.9 – 2.5pp** | |
 
-Every method agrees the effect is real, positive, and smaller than the naive comparison. ~12% of the apparent lift is selection bias - customers who were coming back anyway, credited to an email that did not cause it.
+Every method agrees the effect is real, positive, and smaller than the naive comparison. How much smaller depends on which estimator you trust: the DiD variants put selection bias at 10–12% of the apparent lift, regression adjustment at 31%. Either way, part of that 2.88pp is customers who were coming back anyway, credited to an email that did not cause it.
 
 The credibility here does not rest on any single estimate. Shortened-window DiD is a **robustness check** - same identifying assumption, different handling of the problematic pre-period. Regression adjustment is **triangulation**. It rests on unconfoundedness rather than parallel trends, so it can fail independently. Its agreement is the part that matters.
 
@@ -152,7 +152,7 @@ at multiple cutoffs) are in `causal_analysis.ipynb`, sections 3–9.
 Parallel trends failed the first test, and that shaped the entire analysis. **What fixed it, and how we know?** Matching on RFM drove covariate imbalance from SMD ≈ 0.34 to ≈ 0.02, and the matched-sample diagnostics cleared: placebo 0.04pp (p=0.95), joint F-test p=0.24, pre-period drift falling from −0.038pp/wk to +0.006pp/wk
 
 **Assumptions the headline still rests on:**
-- **Conditional parallel trends.** Tested and passed. 
+- **Conditional parallel trends.** Tested and passed — though passing means *failing to detect* a violation, not proving none exists.
 - **Unconfoundedness** (for the regression-adjustment leg). Untestable in principle. Credible here because targeting is a rule-based CRM process on observable RFM, but any unmeasured input to that rule, email engagement history, tenure, channel preference, would bias it. DiD differences such factors away if they are time-invariant; regression adjustment cannot.
 - **No anticipation effects.** Customers did not change behaviour before receiving the email.
 - **No spillovers.** Untargeted customers were unaffected by the campaign.
@@ -164,8 +164,6 @@ Parallel trends failed the first test, and that shaped the entire analysis. **Wh
 
 **Not implemented, and why:** formal sensitivity analysis (Rambachan & Roth 2023) requires the R-only `HonestDiD` package; synthetic DiD is built for few-units × many-periods panels, the opposite of this 45,000 × 24 shape. Both are cited as the rigorous treatments rather than approximated badly.
 
-**Simulated data.** The dataset is simulated, not company data. Base rates were chosen as plausible values rather than drawn from published benchmarks. The methodology transfers; the specific magnitudes should not be quoted as industry figures.
-
 **What a randomized holdout would have given us.** All of the above is second-best identification. A randomized holdout — withholding the email from a random slice of the eligible list — would deliver the same estimate with no parallel-trends assumption, no unconfoundedness assumption, and no triangulation required. Lewis & Reiley (2014) and Gordon et al. (2018) both show observational estimators can miss experimental benchmarks even with rich covariates. The recommendation below reflects that gap.
 
 ## Marketing Recommendations
@@ -174,7 +172,7 @@ Parallel trends failed the first test, and that shaped the entire analysis. **Wh
 
 ### What the campaign actually delivered
 
-Across 24,516 emails, roughly **620 incremental conversions**, about 710 generated in the moderate-lapse segment, offset by a statistically insignificant negative in deep-lapse. At zero cost, the campaign is unambiguously worth running. **Keep it.**
+Across 24,516 emails, roughly **710 incremental conversions** — essentially all of them from the moderate-lapse segment. Deep-lapse contributed nothing measurable: its point estimate is negative, but not distinguishable from zero, so it is treated as zero here rather than subtracted. At zero cost, the campaign is unambiguously worth running. **Keep it.**
 
 ### 1. Stop treating deep-lapse as a win-back audience
 
@@ -192,7 +190,9 @@ Across 24,516 emails, roughly **620 incremental conversions**, about 710 generat
 
 This is the largest opportunity in the analysis, and it is invisible in the naive framing.
 
-**16,719 moderately-lapsed customers did not receive the email.** They sit inside the same covariate range as the ones who did — matching found a within-caliper control for 100% of treated customers, so this is interpolation, not extrapolation into unfamiliar territory. At the measured 4.14pp incremental effect, reaching them implies **roughly 690 additional incremental conversions** — approximately doubling what the campaign produced, at zero incremental cost.
+**16,719 moderately-lapsed customers did not receive the email.** All of them fall inside the propensity-score range of the customers who were targeted, so extending to them is interpolation rather than extrapolation into unfamiliar territory.
+
+At the measured 4.14pp incremental effect, reaching them implies **roughly 690 additional incremental conversions** — approximately doubling what the campaign produced, at zero incremental cost. **Treat that as an upper bound, not a forecast.** The untargeted group is systematically lower-value within the moderate bucket (frequency 3.3 vs 4.5, monetary $61 vs $79), and this analysis's own central finding is that effect size varies with customer profile — so a constant 4.14pp almost certainly overstates what they would deliver.
 
 **Recommendation:** extend the campaign to untargeted moderate-lapse customers. **Roll it out as a randomized test, not a full send** — which also solves the measurement problem below.
 
