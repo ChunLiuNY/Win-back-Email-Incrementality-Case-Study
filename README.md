@@ -108,7 +108,7 @@ DiD handles unobserved time-invariant confounders but needs a trend assumption; 
 Full diagnostics — covariate-balance tables, this event study, and placebo tests
 at multiple cutoffs — are in `causal_analysis.ipynb`, sections 3–9.
 
-#### Limitations
+### 3. Limitations
 
 - **The PSM+DiD estimated interval is still narrow.** PSM + DiD's CI is [1.21, 3.87], nearly triple regression
   adjustment's width, because matching with replacement reuses 11,185 distinct
