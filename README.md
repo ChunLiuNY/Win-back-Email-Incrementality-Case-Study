@@ -22,13 +22,13 @@ marketing team do differently once they know?**
 
 **The win-back campaign works, but it is worth meaningfully less than the reported lift (2.88pp) — somewhere between 12% and 31% of that lift is selection bias, not campaign effect.**
 
-| Method | Incremental Conversion | 95% CI |
-|---|---|---|
-| Naive comparison | 2.88pp | — |
-| **PSM + DiD (headline)** | **2.54pp** | [1.21, 3.87] |
-| Regression Adjustment | 1.98pp | [1.43, 2.52] |
-| Shortened-window DiD | 2.59pp | [1.92, 3.27] |
-| **All three estimators consistent with** | **1.9 – 2.5pp** | |
+| Method | Incremental Conversion | SE | 95% CI |
+|---|---|---|---|
+| Naive comparison | 2.88pp | — | — |
+| **PSM + DiD (headline)** | **2.54pp** | 0.68pp | [1.21, 3.87] |
+| Regression Adjustment | 1.98pp | 0.28pp | [1.43, 2.52] |
+| Shortened-window DiD | 2.59pp | 0.34pp | [1.92, 3.27] |
+| **All three estimators consistent with** | **1.9 – 2.5pp** | | |
 
 Every method agrees the effect is real, positive, and smaller than the naive comparison suggests. How much smaller depends on which estimator you trust: the DiD variants put selection bias at 10–12% of the apparent lift, regression adjustment at 31%. Either way, some of that 2.88pp reflects customers who were coming back anyway, credited to an email that did not cause it.
 
@@ -73,10 +73,8 @@ customers found a match inside the caliper.
 
 **Its identifying assumption was tested, and held.** After matching, the placebo
 effect collapses to 0.04pp (p = 0.95) from −1.22pp on the raw groups, and the
-event study says the same: the 11 pre-period leads no longer drift, and the
-joint F-test that rejected before now cannot reject. Passing means failing to
-detect a violation, not proving none exists, but it is a test this
-specification could have failed, and did not.
+event study says the same (see below): the 11 pre-period leads no longer drift, and the
+joint F-test that rejected before now cannot reject.
 
 ![Event study: unmatched vs. PSM-matched sample](images/event_study_matched.png)
 
@@ -87,32 +85,32 @@ specification could have failed, and did not.
 
 #### Triangulation
 
-One passing diagnostic is not proof. Two further estimators check whether the
+Below are two further estimators check whether the
 result survives.
 
-**Shortened-window DiD** — restrict the pre-period to weeks −7 onward, where the
+**Shortened-window DiD**: restrict the pre-period to weeks −7 onward, where the
 pre-period parallel trends violation was smallest, and rerun the identical specification. Estimate:
 **2.59pp** [1.92, 3.27]; its own placebo comes back insignificant (−0.33pp,
-p = 0.15). But this rests on the same parallel-trends assumption as PSM + DiD,
-so the two were not likely to disagree. 
+p = 0.15). But this rests on the same parallel-trends assumption,
+so the results were not likely to disagree. 
 
-**Regression adjustment** — regress the post-period outcome on `treated` plus the
-RFM covariates, with no pre-period and no time dimension at all. Estimate:
+**Regression adjustment**: regress the post-period outcome on `treated` plus the
+RFM covariates, with no pre-period and no time dimension included. Estimate:
 **1.98pp** [1.43, 2.52]. This is the check that can fail in a way the DiD variants cannot: it rests on
-**unconfoundedness** — that RFM captures everything driving both targeting and
+**unconfoundedness** - that RFM captures everything driving both targeting and
 purchasing rather than on parallel trends. Being cross-sectional, it never
 looks at the pre-period, so a pre-trend problem cannot contaminate it.
 
-DiD handles unobserved time-invariant confounders but needs a trend assumption; regression adjustment needs no trend assumption but controls only for what was measured. Together they serve as triangulation: two methods whose weaknesses do not overlap, so both would have to fail in the same direction for the answer to be wrong. That they land within 0.6pp of each other (2.54pp vs. 1.98pp) corroborates the PSM + DiD estimate. 
+DiD variants handle unobserved time-invariant confounders but needs a trend assumption; regression adjustment needs no trend assumption but controls only for what was measured. Together they serve as triangulation: two methods whose weaknesses do not overlap, so both would have to fail in the same direction for the answer to be wrong. That they land within 0.6pp of each other (2.54pp vs. 1.98pp) corroborates the headline estimate. 
 
-Full diagnostics — covariate-balance tables, this event study, and placebo tests
-at multiple cutoffs — are in `causal_analysis.ipynb`, sections 3–9.
+Full diagnostics (covariate-balance tables, this event study, and placebo tests
+at multiple cutoffs) are in `causal_analysis.ipynb`, sections 3–9.
 
 ### 3. Limitations
 
 - **The PSM+DiD estimated interval is still narrow.** PSM + DiD's CI is [1.21, 3.87], nearly triple regression
   adjustment's width, because matching with replacement reuses 11,185 distinct
-  controls to serve 24,516 treated customers — the effective sample is far
+  controls to serve 24,516 treated customers, the effective sample is far
   smaller than the headline N. On top of that, PSM + DiD is a two-step
   estimator. The reported standard errors treat the matched sample as fixed, so
   they carry DiD's sampling uncertainty and none of the first stage's. The
@@ -122,9 +120,7 @@ at multiple cutoffs — are in `causal_analysis.ipynb`, sections 3–9.
   but it still has to hold. The event study cannot reject it, and a test that
   fails to reject is not a test that proves.
 - **Only RFM was observed.** Matching and regression adjustment can balance
-  only what is in the data. Other covariates such as browse activity, email engagement history, tenure that could also predict purchasing will bias regression adjustment. DiD differences time-invariant covariates away;
-  regression adjustment cannot, which is one reason the two estimates need not
-  agree exactly.
+  only what is in the data. Other covariates such as browse activity, tenure etc. that could also predict purchasing will bias regression adjustment. DiD differences time-invariant covariates away, regression adjustment cannot.
 - **No controls for time-varying confounders.** Differencing cannot remove anything that moved
   differently across the two groups during the campaign window, e.g., a competitor promotion landing on high-value customers, a seasonal swing that hits frequent buyers harder - is uncontrolled by either method. 
 
