@@ -36,7 +36,7 @@ The credibility here does not rest on any single estimate. Instead, we triangula
 
 ### The finding that should change what the team does
 
-Further splitting by lapse depth:
+Further splitting by lapse depth using the headline spec:
 
 | Segment (based on recency) | Targeted | Incremental Effect | 95% CI | p |
 |---|---|---|---|---|
