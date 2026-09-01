@@ -32,7 +32,7 @@ marketing team do differently once they know?**
 
 Every method agrees the effect is real, positive, and smaller than the naive comparison suggests. How much smaller depends on which estimator you trust: the DiD variants put selection bias at 10–12% of the apparent lift, regression adjustment at 31%. Either way, some of that 2.88pp reflects customers who were coming back anyway, credited to an email that did not cause it.
 
-The credibility here does not rest on any single estimate. Instead, we triangulate across approaches that rely on different assumptions and check whether they converge
+The credibility here does not rest on any single estimate. Instead, we triangulate across approaches that rely on different assumptions and check whether they agree.
 
 ### The finding that should change what the team does
 
