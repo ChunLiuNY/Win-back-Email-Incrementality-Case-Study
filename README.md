@@ -12,7 +12,7 @@ targeted, an apparent **2.88pp lift** the campaign takes credit for.
 
 But that number is inflated by **selection bias**: recipients were chosen
 because they are most valuable based on RFM history, so they were always the likelier group
-to convert. But some lapsed customers could come back regardless.
+to convert. Customers could come back regardless.
 
 **So how much of that 2.88pp lift did the campaign actually cause, and what should the
 marketing team do differently once they know?**
@@ -43,7 +43,7 @@ Further splitting by lapse depth using the headline spec:
 | Moderate (60–119d) | 17,084 | **+4.14pp** | [2.51, 5.76] | <0.0001 |
 | Deep (≥120d) | 7,432 | **−1.09pp** | [−3.38, 1.20] | 0.35 |
 
-The gap is real and the effect is concentrated in the moderate segment (60-119 inactive days; `lapse_bucket` was pre-specified in the data). Regression adjustment reproduces the same pattern (moderate +2.64pp, deep −0.12pp). For deep-lapse customers, the naive comparison shows 6.19% converting versus 5.79% of untargeted ones — a positive-looking 0.40pp lift that is incrementally indistinguishable from zero. Those customers were cycling back on their own; the email is taking credit for a trajectory it did not change..
+The gap is real and the effect is concentrated in the moderate segment (60-119 inactive days; `lapse_bucket` was pre-specified in the data). Regression adjustment reproduces the same pattern (moderate +2.64pp, deep −0.12pp). For deep-lapse customers, the naive comparison shows 6.19% converting versus 5.79% of untargeted ones — a positive-looking 0.40pp lift that is incrementally indistinguishable from zero. Those customers were cycling back on their own. 
 
 
 ## Method
@@ -51,12 +51,12 @@ The gap is real and the effect is concentrated in the moderate segment (60-119 i
 ### 1. Identification
 
 Targeting was non-random, so comparing post-period levels confounds the
-email's effect with who was selected to receive it. The **treated** group is the 24,516 lapsed customers the CRM rule picked to receive the win-back email; the **control** group is the 20,484 lapsed customers who were not picked by the CRM rule. Difference-in-differences (DiD) gets around this by comparing each group's change instead of its level, differncing away time-invariant confounders. 
+email's effect with who was selected to receive it. The **treated** group is the 24,516 lapsed customers the CRM rule picked to receive the win-back email; the **control** group is the 20,484 lapsed customers who were not picked by the CRM rule. DiD gets around this by comparing each group's change instead of its level, differncing away time-invariant confounders. 
 
 That buys a different assumption in exchange: **parallel trends** — absent the
-campaign, treated and control would have moved together.
+campaign, treated and control would have moved in parallel.
 
-**Treatment and control were not moving in parallel in pre-period.** A placebo test on the pre-period returned a significant "effect" (−1.22pp, p = 0.0008), and an event study with a joint F-test across all 11 pre-period leads rejected parallel trends at p = 0.0002. Why the assumption failed follows directly from how targeting worked: treated and control customers sit at systematically
+**However, the parallel trends failed in the data.** A placebo test on the pre-period returned a significant "effect" (−1.22pp, p = 0.0008), and an event study with a joint F-test across all 11 pre-period leads rejected parallel trends at p = 0.0002. The reason why it failed follows directly from how targeting worked: treated and control customers sit at systematically
 different baseline RFM levels which lead to different purchase trajectories. That rules out plain DiD on the raw groups, so the analysis falls back on a weaker assumption - **Conditional parallel trends**: trends need only run parallel among customers with comparable RFM. Matching on pre-period RFM is how the estimation below satisfies it.
 
 ### 2. Estimation
