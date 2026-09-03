@@ -45,7 +45,7 @@ adjustment at 31%. Either way, part of that 2.88pp reflects customers who were
 coming back anyway, credited to an email that did not cause it.
 
 No single estimate carries this conclusion. Credibility comes from
-triangulation — three approaches leaning on different assumptions, checked
+triangulation — using approaches leaning on different assumptions to check
 against each other.
 
 ### The finding that should change what the team does
